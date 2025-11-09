@@ -65,7 +65,11 @@ Format your response EXACTLY as JSON with this structure:
     }
 
     const result = await response.json();
-    const content = result.choices[0].message.content;
+    let content = result.choices[0].message.content;
+    
+    // Remove markdown code blocks if present
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
     const parsedContent = JSON.parse(content);
     
     console.log('Pitch generation successful');
