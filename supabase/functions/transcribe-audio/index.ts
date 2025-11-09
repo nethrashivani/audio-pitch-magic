@@ -29,11 +29,11 @@ serve(async (req) => {
     formData.append('file', blob, 'audio.webm');
     formData.append('model', 'whisper-1');
 
-    // Call OpenAI Whisper via Lovable AI
+    // Call OpenAI Whisper API
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
       },
       body: formData,
     });
