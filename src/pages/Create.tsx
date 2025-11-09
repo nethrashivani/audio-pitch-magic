@@ -12,7 +12,7 @@ type Stage = 'idle' | 'recording' | 'transcribed' | 'generated';
 
 export default function Create() {
   const navigate = useNavigate();
-  const { isRecording, audioBlob, startRecording, stopRecording, resetRecording } = useAudioRecorder();
+  const { isRecording, transcript: recordedTranscript, startRecording, stopRecording, resetRecording } = useAudioRecorder();
   const [stage, setStage] = useState<Stage>('idle');
   const [transcript, setTranscript] = useState('');
   const [oneLiner, setOneLiner] = useState('');
@@ -22,6 +22,7 @@ export default function Create() {
   const handleRecord = () => {
     if (isRecording) {
       stopRecording();
+      setTranscript(recordedTranscript);
       setStage('transcribed');
     } else {
       startRecording();
@@ -37,42 +38,13 @@ export default function Create() {
     setDeckStructure('');
   };
 
-  const handleTranscribe = async () => {
-    if (!audioBlob) return;
-
-    setIsProcessing(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = reader.result?.toString().split(',')[1];
-        
-        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Audio }
-        });
-
-        if (error) throw error;
-        setTranscript(data.transcript);
-        toast({
-          title: 'Transcription Complete',
-          description: 'Your audio has been transcribed successfully.',
-        });
-      };
-    } catch (error) {
-      console.error('Transcription error:', error);
-      toast({
-        title: 'Transcription Failed',
-        description: 'Failed to transcribe audio. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleGeneratePitch = async () => {
     if (!transcript) {
-      await handleTranscribe();
+      toast({
+        title: 'No Transcript',
+        description: 'Please record your pitch first.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -193,8 +165,8 @@ export default function Create() {
                 </h2>
                 <p className="text-muted-foreground max-w-md">
                   {isRecording
-                    ? "Speak clearly about your startup idea. Click again to stop."
-                    : "Click the button and start talking about your startup idea"}
+                    ? "Speak clearly about your startup idea. Your speech is being transcribed in real-time."
+                    : "Click the button and start talking about your startup idea. Speech recognition will transcribe automatically."}
                 </p>
               </div>
             </div>
@@ -226,14 +198,17 @@ export default function Create() {
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">Recording Complete</h2>
             <p className="text-muted-foreground">
-              Your audio has been recorded. Generate your pitch or record again.
+              Your speech has been transcribed. Review it below and generate your pitch or record again.
             </p>
+            <div className="p-4 bg-accent/10 rounded-lg border border-border/40">
+              <p className="text-sm whitespace-pre-wrap">{transcript || "No transcript available"}</p>
+            </div>
           </div>
 
           <div className="flex gap-4">
             <Button
               onClick={handleGeneratePitch}
-              disabled={isProcessing}
+              disabled={isProcessing || !transcript}
               className="flex-1"
               size="lg"
             >

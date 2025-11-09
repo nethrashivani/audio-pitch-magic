@@ -3,56 +3,81 @@ import { toast } from '@/hooks/use-toast';
 
 export const useAudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const [transcript, setTranscript] = useState<string>('');
+  const recognitionRef = useRef<any>(null);
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+      // Check if browser supports Web Speech API
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        throw new Error('Speech recognition is not supported in this browser');
+      }
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      let finalTranscript = '';
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcriptText = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcriptText + ' ';
+          } else {
+            interimTranscript += transcriptText;
+          }
         }
+        
+        setTranscript(finalTranscript + interimTranscript);
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        stream.getTracks().forEach(track => track.stop());
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        toast({
+          title: 'Recognition Error',
+          description: 'Speech recognition encountered an error. Please try again.',
+          variant: 'destructive',
+        });
       };
 
-      mediaRecorder.start();
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.start();
+      recognitionRef.current = recognition;
       setIsRecording(true);
+      setTranscript('');
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('Error starting speech recognition:', error);
       toast({
         title: 'Recording Error',
-        description: 'Could not access microphone. Please check permissions.',
+        description: 'Could not start speech recognition. Please check browser support and permissions.',
         variant: 'destructive',
       });
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
       setIsRecording(false);
     }
   };
 
   const resetRecording = () => {
-    setAudioBlob(null);
-    chunksRef.current = [];
+    setTranscript('');
   };
 
   return {
     isRecording,
-    audioBlob,
+    transcript,
     startRecording,
     stopRecording,
     resetRecording,
