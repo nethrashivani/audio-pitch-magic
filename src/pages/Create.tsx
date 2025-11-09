@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mic, Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import type { User } from "@supabase/supabase-js";
 
 type Stage = 'idle' | 'recording' | 'transcribed' | 'generated';
 
@@ -18,6 +19,20 @@ export default function Create() {
   const [oneLiner, setOneLiner] = useState('');
   const [deckStructure, setDeckStructure] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Check authentication status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleRecord = () => {
     if (isRecording) {
@@ -77,18 +92,17 @@ export default function Create() {
   };
 
   const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: 'Please sign in',
+        description: 'You need to be logged in to save your pitch.',
+      });
+      navigate('/auth');
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: 'Authentication Required',
-          description: 'Please sign in to save your pitch.',
-          variant: 'destructive',
-        });
-        return;
-      }
 
       const { error } = await supabase.from('pitches').insert({
         user_id: user.id,

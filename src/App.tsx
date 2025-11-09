@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Create from "./pages/Create";
 import Library from "./pages/Library";
+import Auth from "./pages/Auth";
 import { DashboardLayout } from "./components/DashboardLayout";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<Navigate to="/dashboard/create" replace />} />
               <Route path="create" element={<Create />} />
