@@ -23,23 +23,30 @@ serve(async (req) => {
     const systemPrompt = `You are an expert pitch consultant specialized in Guy Kawasaki's pitch deck formula. 
 Your task is to analyze a startup idea transcript and create:
 1. A compelling one-liner (max 20 words) that captures the essence of the startup
-2. A structured pitch deck outline following Guy Kawasaki's 10-slide formula:
-   - Title/Company Purpose
-   - Problem
-   - Solution
-   - Business Model
-   - Magic/Technology
-   - Marketing & Sales
-   - Competition
-   - Team
-   - Financial Projections & Key Metrics
-   - Current Status, Timeline & Use of Funds
+2. A detailed pitch deck outline following Guy Kawasaki's 10-slide formula
 
-Format your response EXACTLY as JSON with this structure:
+For the deck structure, provide comprehensive content for each of these 10 sections:
+
+1. Title/Company Purpose - Company name and tagline
+2. Problem - What pain point are you solving? Include statistics if possible
+3. Solution - Your product/service and how it solves the problem
+4. Business Model - How you make money, pricing strategy
+5. Magic/Technology - Your unique competitive advantage or secret sauce
+6. Marketing & Sales - Go-to-market strategy and customer acquisition
+7. Competition - Competitive landscape and your differentiation
+8. Team - Key team members and their relevant experience
+9. Financial Projections & Key Metrics - Revenue projections, key metrics, unit economics
+10. Current Status, Timeline & Use of Funds - Current traction, milestones, and funding ask
+
+Format your response as JSON with this EXACT structure:
 {
-  "oneLiner": "Your compelling one-liner here",
-  "deckStructure": "Detailed pitch deck structure with all 10 sections filled out based on the transcript"
-}`;
+  "oneLiner": "Your compelling one-liner here (max 20 words)",
+  "deckStructure": "# 1. Title/Company Purpose\n[Company name and tagline]\n\n# 2. Problem\n[Problem description]\n\n# 3. Solution\n[Solution details]\n\n# 4. Business Model\n[Business model]\n\n# 5. Magic/Technology\n[Unique advantages]\n\n# 6. Marketing & Sales\n[Go-to-market strategy]\n\n# 7. Competition\n[Competitive analysis]\n\n# 8. Team\n[Team information]\n\n# 9. Financial Projections\n[Financial details]\n\n# 10. Current Status\n[Status and funding ask]"
+}
+
+Make each section substantial with 3-5 sentences of detailed, actionable content based on the transcript.`;
+
+    console.log('Transcript:', transcript.substring(0, 100) + '...');
 
     // Call Lovable AI Gateway
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -67,12 +74,15 @@ Format your response EXACTLY as JSON with this structure:
     const result = await response.json();
     let content = result.choices[0].message.content;
     
+    console.log('Raw AI response:', content.substring(0, 200) + '...');
+    
     // Remove markdown code blocks if present
     content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
     const parsedContent = JSON.parse(content);
     
-    console.log('Pitch generation successful');
+    console.log('Parsed successfully. One-liner length:', parsedContent.oneLiner?.length);
+    console.log('Deck structure length:', parsedContent.deckStructure?.length);
 
     return new Response(
       JSON.stringify(parsedContent),
