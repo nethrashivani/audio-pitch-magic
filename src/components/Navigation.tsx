@@ -4,63 +4,55 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
-
 export const Navigation = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       setUser(session?.user ?? null);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({
       title: "Logged out",
-      description: "You've been successfully logged out.",
+      description: "You've been successfully logged out."
     });
     navigate("/");
   };
-
   const handleSwitchAccounts = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
   };
-
   const getUserInitials = () => {
     if (user?.email) {
       return user.email.substring(0, 2).toUpperCase();
     }
     return "U";
   };
-
-  return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
+  return <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
               <Mic className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-xl font-bold">pitchUp</span>
+            <span className="text-xl font-bold">PitchUp</span>
           </div>
           
           <div className="hidden md:flex items-center gap-8">
@@ -76,8 +68,7 @@ export const Navigation = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {user ? (
-              <DropdownMenu>
+            {user ? <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <Avatar className="h-9 w-9">
@@ -106,20 +97,16 @@ export const Navigation = () => {
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
+              </DropdownMenu> : <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
                   Sign in
                 </Button>
                 <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => navigate("/auth")}>
                   Get started
                 </Button>
-              </>
-            )}
+              </>}
           </div>
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };

@@ -1,15 +1,15 @@
 import { Mic, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 export const Hero = () => {
-  return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+  return <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-purple-500/20" />
       
       {/* Animated gradient orbs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-float" style={{ animationDelay: "1s" }} />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-float" style={{
+      animationDelay: "1s"
+    }} />
       
       <div className="container relative z-10 px-6 py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
@@ -42,9 +42,7 @@ export const Hero = () => {
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </a>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 h-14">
-              Watch demo
-            </Button>
+            <Button size="lg" variant="outline" className="px-8 h-14 text-sm text-center">​HOW TO CREATE A PITCH?</Button>
           </div>
 
           {/* Stats */}
@@ -67,6 +65,5 @@ export const Hero = () => {
 
       {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
-    </section>
-  );
+    </section>;
 };
