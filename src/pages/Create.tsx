@@ -21,6 +21,30 @@ export default function Create() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
+  // Load saved draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('pitch-draft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.transcript) setTranscript(draft.transcript);
+        if (draft.oneLiner) setOneLiner(draft.oneLiner);
+        if (draft.deckStructure) setDeckStructure(draft.deckStructure);
+        if (draft.stage) setStage(draft.stage);
+      } catch (e) {
+        console.error('Failed to load draft:', e);
+      }
+    }
+  }, []);
+
+  // Auto-save draft periodically
+  useEffect(() => {
+    if (transcript || oneLiner || deckStructure) {
+      const draft = { transcript, oneLiner, deckStructure, stage };
+      localStorage.setItem('pitch-draft', JSON.stringify(draft));
+    }
+  }, [transcript, oneLiner, deckStructure, stage]);
+
   useEffect(() => {
     // Check authentication status
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -118,6 +142,8 @@ export default function Create() {
         description: 'Your pitch has been saved to your library.',
       });
 
+      // Clear draft after successful save
+      localStorage.removeItem('pitch-draft');
       navigate('/dashboard/library');
     } catch (error) {
       console.error('Save error:', error);

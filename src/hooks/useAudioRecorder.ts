@@ -5,6 +5,7 @@ export const useAudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState<string>('');
   const recognitionRef = useRef<any>(null);
+  const finalTranscriptRef = useRef<string>('');
 
   const startRecording = async () => {
     try {
@@ -20,40 +21,63 @@ export const useAudioRecorder = () => {
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
-      let finalTranscript = '';
-
       recognition.onresult = (event: any) => {
         let interimTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcriptText = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += transcriptText + ' ';
+            finalTranscriptRef.current += transcriptText + ' ';
           } else {
             interimTranscript += transcriptText;
           }
         }
         
-        setTranscript(finalTranscript + interimTranscript);
+        setTranscript(finalTranscriptRef.current + interimTranscript);
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        toast({
-          title: 'Recognition Error',
-          description: 'Speech recognition encountered an error. Please try again.',
-          variant: 'destructive',
-        });
+        
+        // Auto-restart on certain errors to support long sessions
+        if (event.error === 'no-speech' || event.error === 'audio-capture') {
+          if (isRecording && recognitionRef.current) {
+            setTimeout(() => {
+              try {
+                recognitionRef.current?.start();
+              } catch (e) {
+                console.error('Failed to restart recognition:', e);
+              }
+            }, 100);
+          }
+        } else {
+          toast({
+            title: 'Recognition Error',
+            description: 'Speech recognition encountered an error. Please try again.',
+            variant: 'destructive',
+          });
+        }
       };
 
       recognition.onend = () => {
-        setIsRecording(false);
+        // Auto-restart for long sessions if still recording
+        if (isRecording && recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            console.error('Failed to restart recognition:', e);
+            setIsRecording(false);
+          }
+        } else {
+          setIsRecording(false);
+        }
       };
 
       recognition.start();
       recognitionRef.current = recognition;
       setIsRecording(true);
       setTranscript('');
+      finalTranscriptRef.current = '';
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       toast({
@@ -73,6 +97,7 @@ export const useAudioRecorder = () => {
 
   const resetRecording = () => {
     setTranscript('');
+    finalTranscriptRef.current = '';
   };
 
   return {
