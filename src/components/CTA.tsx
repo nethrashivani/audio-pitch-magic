@@ -25,12 +25,13 @@ export const CTA = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 h-14 group">
-              <Mic className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-              Start for free
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 h-14 group" asChild>
+              <a href="/auth">
+                <Mic className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+                Start for free
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </a>
             </Button>
-            
           </div>
 
           <p className="text-sm text-muted-foreground pt-4">
